@@ -128,9 +128,9 @@ def main():
 
     myStepper = Stepper(gpio_pins)
 
-    myStepper.motor_run(2000, clockwise=True)
+    myStepper.motor_run(2000, clockwise=True, mode="half")
     time.sleep( 1 )
-    myStepper.motor_run(1000, clockwise=True,mode="full")
+    myStepper.motor_run(1000, clockwise=False,mode="full")
     myStepper.cleanup()
     exit( 0 )
 
