@@ -4,6 +4,8 @@ import argparse
 import imutils
 import time
 import cv2
+import numpy as np
+
 
 # print(cv2.__version__)
 
@@ -55,13 +57,14 @@ else:
 vs = cv2.VideoCapture("moon_timelapse_nuage_1080.mp4")
 # initialize the FPS throughput estimator
 fps = None
-
 # loop over frames from the video stream
 i = 0
 while True:
 	# grab the current frame, then handle if we are using a
 	# VideoStream or VideoCapture object
+	
 	grabbed, frame = vs.read()
+	print('Teste: ',grabbed)
 	# check if the frame was successfully grabbed
 	if not grabbed:
 		print("[INFO] Unable to grab a frame. End of video")
@@ -74,17 +77,24 @@ while True:
 	# resize the frame (so we can process it faster) and grab the
 	# frame dimensions
 	frame = imutils.resize(frame, width=500)
-	(H, W) = frame.shape[:2]
+	(H, W) = frame.shape[:2]#ta trocado essa porra, H = largura horizontal e W = largura vertical
 	
 	# check to see if we are currently tracking an object
 	if initBB is not None:
 		# grab the new bounding box coordinates of the object
 		(success, box) = tracker.update(frame)
 		# check to see if the tracking was a success
+		center_frame = (int((W-1)/2),int((H-1)/2))
+
 		if success:
 			(x, y, w, h) = [int(v) for v in box]
+			center_box = (x+ int(0.5*w),y+int(0.5*h))
 			cv2.rectangle(frame, (x, y), (x + w, y + h),
 				(0, 255, 0), 2)
+			
+			cv2.line(frame, center_frame , center_box , (255,0,0), 2)
+			dist_y, dist_x  = (center_box[0] - center_frame[0] ,
+					  center_box[1] - center_frame[1] )
 		# update the FPS counter
 		fps.update()
 		fps.stop()
@@ -94,12 +104,17 @@ while True:
 			("Tracker", args["tracker"]),
 			("Success", "Yes" if success else "No"),
 			("FPS", "{:.2f}".format(fps.fps())),
+			("Distance", "({}, {}) pxs".format(dist_y,dist_x)),
 		]
 		# loop over the info tuples and draw them on our frame
 		for (i, (k, v)) in enumerate(info):
 			text = "{}: {}".format(k, v)
 			cv2.putText(frame, text, (10, H - ((i * 20) + 20)),
 				cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+		#I'm putting a little line above the old text indicating the distance the center of the box
+		#is from the center of our screen/frame, so we can move the motor
+
+		
 	# show the output frame
 	cv2.imshow("Frame", frame)
 	key = cv2.waitKey(1) & 0xFF
@@ -113,6 +128,7 @@ while True:
 		# start OpenCV object tracker using the supplied bounding box
 		# coordinates, then start the FPS throughput estimator as well
 		tracker.init(frame, initBB)
+		
 		fps = FPS().start()
 	# if the `q` key was pressed, break from the loop
 	elif key == ord("q"):
