@@ -14,7 +14,7 @@ import numpy as np
 ap = argparse.ArgumentParser()
 ap.add_argument("-v", "--video", type=str,
 	help="path to input video file")
-ap.add_argument("-t", "--tracker", type=str, default="kcf",
+ap.add_argument("-t", "--tracker", type=str, default="CSRT",
 	help="OpenCV object tracker type")
 args = vars(ap.parse_args())
 
@@ -58,8 +58,9 @@ vs = cv2.VideoCapture("moon_timelapse_nuage_1080.mp4")
 # initialize the FPS throughput estimator
 fps = None
 # loop over frames from the video stream
-i = 0
+num_loop = 0
 while True:
+	num_loop+=1
 	# grab the current frame, then handle if we are using a
 	# VideoStream or VideoCapture object
 	
@@ -76,7 +77,7 @@ while True:
 	# resize the frame (so we can process it faster) and grab the
 	# frame dimensions
 	frame = imutils.resize(frame, width=500)
-	(H, W) = frame.shape[:2]#ta trocado essa porra, H = largura horizontal e W = largura vertical
+	(H, W) = frame.shape[:2] #ta trocado essa porra, H = largura horizontal e W = largura vertical
 	
 	# check to see if we are currently tracking an object
 	if initBB is not None:
@@ -119,14 +120,15 @@ while True:
 	key = cv2.waitKey(1) & 0xFF
 	# if the 's' key is selected, we are going to "select" a bounding
 	# box to track
-	if i % 1000==0:
+
+	if (num_loop%100) == 1:
 		
 		# Try to detect the moon in the frame
 		gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) #gray_scale the image
 		_, gray = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY) #threshold the image
 		gray = cv2.GaussianBlur(gray, (3, 3), 0) #blur the grayscale image
 
-		# cv2.imshow("mask", thresh)
+		cv2.imshow("mask", gray)
 
 
 		#detecting circles
@@ -140,7 +142,7 @@ while True:
 		print_rect = tuple(map(int, print_rect))
 		print_rect = np.uint16(np.around(print_rect))
 		cv2.rectangle(frame, (print_rect[0], print_rect[2]), (print_rect[1], print_rect[3]), (255, 255, 0), 2)
-			# print("Detection =", type(print_rect[0]), print_rect)
+		# print("Detection =", type(print_rect[0]), print_rect, 'i=', num_loop)
 		# select the bounding box of the object we want to track (make
 		# sure you press ENTER or SPACE after selecting the ROI)
 		# initBB = cv2.selectROI("Frame", frame, fromCenter=False,
@@ -151,14 +153,13 @@ while True:
 		initBB = list(map(int, initBB))
 		# start OpenCV object tracker using the supplied bounding box
 		# coordinates, then start the FPS throughput estimator as well
+		tracker = cv2.legacy.TrackerCSRT_create()
 		tracker.init(gray, initBB)
 		
 		fps = FPS().start()
 	# if the `q` key was pressed, break from the loop
 	elif key == ord("q"):
 		break
-
-	i+=1
 """
 # if we are using a webcam, release the pointer
 if not args.get("video", False):
