@@ -38,7 +38,7 @@ OPENCV_OBJECT_TRACKERS = {
 # grab the appropriate object tracker using our dictionary of
 # OpenCV object tracker objects
 #tracker = OPENCV_OBJECT_TRACKERS[args["tracker"]]()
-tracker = cv2.TrackerMIL_create()
+tracker = cv2.legacy.TrackerCSRT_create()
 
 # initialize the bounding box coordinates of the object we are going
 # to track
@@ -64,7 +64,6 @@ while True:
 	# VideoStream or VideoCapture object
 	
 	grabbed, frame = vs.read()
-	print('Teste: ',grabbed)
 	# check if the frame was successfully grabbed
 	if not grabbed:
 		print("[INFO] Unable to grab a frame. End of video")
@@ -120,19 +119,46 @@ while True:
 	key = cv2.waitKey(1) & 0xFF
 	# if the 's' key is selected, we are going to "select" a bounding
 	# box to track
-	if key == ord("s"):
+	if i % 1000==0:
+		
+		# Try to detect the moon in the frame
+		gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) #gray_scale the image
+		_, gray = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY) #threshold the image
+		gray = cv2.GaussianBlur(gray, (3, 3), 0) #blur the grayscale image
+
+		# cv2.imshow("mask", thresh)
+
+
+		#detecting circles
+		moon = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1, 300, param1=300, param2=10, minRadius=10, maxRadius=40)
+		moon = moon[0][0]
+		moon = np.uint16(np.around(moon))
+
+		cv2.circle(frame, (moon[0], moon[1]), moon[2], (0, 255, 255), 2) 
+		alpha = 1.2 #Parameter for the square around the moon
+		print_rect = [moon[0]-alpha*moon[2], moon[0]+alpha*moon[2], moon[1]-alpha*moon[2], moon[1]+alpha*moon[2]]
+		print_rect = tuple(map(int, print_rect))
+		print_rect = np.uint16(np.around(print_rect))
+		cv2.rectangle(frame, (print_rect[0], print_rect[2]), (print_rect[1], print_rect[3]), (255, 255, 0), 2)
+			# print("Detection =", type(print_rect[0]), print_rect)
 		# select the bounding box of the object we want to track (make
 		# sure you press ENTER or SPACE after selecting the ROI)
-		initBB = cv2.selectROI("Frame", frame, fromCenter=False,
-			showCrosshair=True)
+		# initBB = cv2.selectROI("Frame", frame, fromCenter=False,
+		# 	showCrosshair=True) 
+  	
+	
+		initBB = [moon[0]-alpha*moon[2],moon[1]-alpha*moon[2],2*alpha*moon[2],2*alpha*moon[2]]
+		initBB = list(map(int, initBB))
 		# start OpenCV object tracker using the supplied bounding box
 		# coordinates, then start the FPS throughput estimator as well
-		tracker.init(frame, initBB)
+		tracker.init(gray, initBB)
 		
 		fps = FPS().start()
 	# if the `q` key was pressed, break from the loop
 	elif key == ord("q"):
 		break
+
+	i+=1
 """
 # if we are using a webcam, release the pointer
 if not args.get("video", False):
