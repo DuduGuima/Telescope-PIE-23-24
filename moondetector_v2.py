@@ -59,6 +59,10 @@ vs = cv2.VideoCapture("moon_timelapse_nuage_1080.mp4")
 fps = None
 # loop over frames from the video stream
 num_loop = 0
+#tolerance for moon distance to center
+epsi = 0.5
+#number of steps the motors will do for each iteration of the loop
+num_steps = 2
 while True:
 	num_loop+=1
 	# grab the current frame, then handle if we are using a
@@ -157,7 +161,11 @@ while True:
 		tracker.init(gray, initBB)
 		
 		fps = FPS().start()
+		for i in range(num_steps):
+			center_box(dist_y,dist_x)
 	# if the `q` key was pressed, break from the loop
+	if num_loop > 10000:
+		num_loop=1
 	elif key == ord("q"):
 		break
 """
