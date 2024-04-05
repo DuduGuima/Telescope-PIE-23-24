@@ -7,6 +7,10 @@ from adafruit_motorkit import MotorKit
 # Below initialises the variable kit to be our I2C Connected Adafruit Motor HAT
 kit = MotorKit(i2c=board.I2C())
 
+#PAN SEMPRE NO 1
+#TILT SEMPRE NO 2
+
+
 def center_moon(dist_y,dist_x):
     ver_x = dist_x>0
     ver_y = dist_y>0
@@ -19,10 +23,10 @@ def center_moon(dist_y,dist_x):
         kit.stepper1.onestep(direction = stepper.BACKWARD, style = stepper.MICROSTEP)
         kit.stepper2.onestep(direction = stepper.BACKWARD, style= stepper.MICROSTEP)
 
-    if ver_y:
+    if not ver_y:
         kit.stepper1.onestep(style = stepper.MICROSTEP)
         kit.stepper2.onestep(direction = stepper.BACKWARD, style= stepper.MICROSTEP)
-    if not ver_y:
+    if  ver_y:
         kit.stepper1.onestep(direction = stepper.BACKWARD, style = stepper.MICROSTEP)
         kit.stepper2.onestep(style= stepper.MICROSTEP)
 
