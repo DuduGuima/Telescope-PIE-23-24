@@ -5,7 +5,7 @@ import imutils
 import time
 import cv2
 import numpy as np
-
+import movement
 
 # print(cv2.__version__)
 
@@ -162,7 +162,7 @@ while True:
 		
 		fps = FPS().start()
 		for i in range(num_steps):
-			center_box(dist_y,dist_x)
+			center_moon(dist_y,dist_x)
 	# if the `q` key was pressed, break from the loop
 	if num_loop > 10000:
 		num_loop=1
