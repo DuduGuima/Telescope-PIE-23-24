@@ -48,7 +48,7 @@ initBB = None
 # if a video path was not supplied, grab the reference to the web cam
 if not args.get("video", False):
 	print("[INFO] starting video stream...")
-	vs = VideoStream(src=1).start()
+	vs = VideoStream(src=0).start()
 	time.sleep(1.0)
 # otherwise, grab a reference to the video file
 else:
@@ -85,7 +85,7 @@ while True:
 	# resize the frame (so we can process it faster) and grab the
 	# frame dimensions
 	frame = imutils.resize(frame, width=500)
-	(H, W) = frame.shape[:2] #ta trocado essa porra, H = largura horizontal e W = largura vertical
+	(H, W) = frame.shape[:2] #H = width and W = height for some reason
 	
 	# check to see if we are currently tracking an object
 	if initBB is not None:
@@ -134,7 +134,7 @@ while True:
 		# Try to detect the moon in the frame
 		gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) #gray_scale the image
 		_, gray = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY) #threshold the image 100 for night 150 for day
-		# _, gray = cv2.threshold(gray, 150, 255, cv2.THRESH_BINARY)
+		
 		gray = cv2.GaussianBlur(gray, (3, 3), 0) #blur the grayscale image
 
 		cv2.imshow("mask", gray)
@@ -152,10 +152,7 @@ while True:
 		print_rect = np.uint16(np.around(print_rect))
 		cv2.rectangle(frame, (print_rect[0], print_rect[2]), (print_rect[1], print_rect[3]), (255, 255, 0), 2)
 		# print("Detection =", type(print_rect[0]), print_rect, 'i=', num_loop)
-		# select the bounding box of the object we want to track (make
-		# sure you press ENTER or SPACE after selecting the ROI)
-		# initBB = cv2.selectROI("Frame", frame, fromCenter=False,
-		# 	showCrosshair=True) 
+
   	
 	
 		initBB = [moon[0]-alpha*moon[2],moon[1]-alpha*moon[2],2*alpha*moon[2],2*alpha*moon[2]]
