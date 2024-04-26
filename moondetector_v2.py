@@ -44,17 +44,18 @@ tracker = cv2.legacy.TrackerCSRT_create()
 # to track
 initBB = None
 
-"""
+
 # if a video path was not supplied, grab the reference to the web cam
 if not args.get("video", False):
 	print("[INFO] starting video stream...")
-	vs = VideoStream(src=0).start()
+	vs = VideoStream(src=1).start()
 	time.sleep(1.0)
 # otherwise, grab a reference to the video file
 else:
 	vs = cv2.VideoCapture(args["video"])
-"""
-vs = cv2.VideoCapture("moon_timelapse_nuage_1080.mp4")
+
+# vs = cv2.VideoCapture("moon_timelapse_nuage_1080.mp4")
+
 # initialize the FPS throughput estimator
 fps = None
 # loop over frames from the video stream
@@ -68,12 +69,15 @@ while True:
 	# grab the current frame, then handle if we are using a
 	# VideoStream or VideoCapture object
 	
-	grabbed, frame = vs.read()
+	# grabbed, frame = vs.read()
+	frame = vs.read()
+	frame = frame[1] if args.get("video", False) else frame
+
 	# check if the frame was successfully grabbed
-	if not grabbed:
-		print("[INFO] Unable to grab a frame. End of video")
-		break
-	#frame = frame[1] if args.get("video", False) else frame
+	# if not grabbed:
+	# 	print("[INFO] Unable to grab a frame. End of video")
+	# 	break
+	
 	# check to see if we have reached the end of the stream
 	if frame is None:
 		print("Breaking")
@@ -129,7 +133,8 @@ while True:
 		
 		# Try to detect the moon in the frame
 		gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) #gray_scale the image
-		_, gray = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY) #threshold the image
+		_, gray = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY) #threshold the image 100 for night 150 for day
+		# _, gray = cv2.threshold(gray, 150, 255, cv2.THRESH_BINARY)
 		gray = cv2.GaussianBlur(gray, (3, 3), 0) #blur the grayscale image
 
 		cv2.imshow("mask", gray)
@@ -161,21 +166,20 @@ while True:
 		tracker.init(gray, initBB)
 		
 		fps = FPS().start()
-		for i in range(num_steps):
-			center_box(dist_y,dist_x)
+		# for i in range(num_steps):
+		# 	center_moon(dist_y,dist_x)
 	# if the `q` key was pressed, break from the loop
 	if num_loop > 10000:
 		num_loop=1
 	elif key == ord("q"):
 		break
-"""
+
 # if we are using a webcam, release the pointer
 if not args.get("video", False):
 	vs.stop()
 
 # otherwise, release the file pointer
 else:
-"""
-vs.release()
+	vs.release()
 # close all windows
 cv2.destroyAllWindows()
