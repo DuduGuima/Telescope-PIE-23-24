@@ -5,6 +5,8 @@ import imutils
 import time
 import cv2
 import numpy as np
+from movement import center_moon
+from movement import kit
 
 
 # print(cv2.__version__)
@@ -63,7 +65,7 @@ num_loop = 0
 #tolerance for moon distance to center
 epsi = 0.5
 #number of steps the motors will do for each iteration of the loop
-num_steps = 2
+num_steps = 5
 while True:
 	num_loop+=1
 	# grab the current frame, then handle if we are using a
@@ -129,7 +131,7 @@ while True:
 	# if the 's' key is selected, we are going to "select" a bounding
 	# box to track
 
-	if (num_loop%100) == 1:
+	if (num_loop%5) == 1:
 		
 		# Try to detect the moon in the frame
 		gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) #gray_scale the image
@@ -142,8 +144,12 @@ while True:
 
 		#detecting circles
 		moon = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1, 300, param1=300, param2=10, minRadius=10, maxRadius=40)
-		moon = moon[0][0]
-		moon = np.uint16(np.around(moon))
+		try:
+			moon = moon[0][0]
+			moon = np.uint16(np.around(moon))
+		except:
+			print("No moon detected")
+			continue
 
 		cv2.circle(frame, (moon[0], moon[1]), moon[2], (0, 255, 255), 2) 
 		alpha = 1.2 #Parameter for the square around the moon
@@ -163,20 +169,22 @@ while True:
 		tracker.init(gray, initBB)
 		
 		fps = FPS().start()
-		# for i in range(num_steps):
-		# 	center_moon(dist_y,dist_x)
+		for i in range(num_steps):
+			center_moon(dist_y,dist_x)
 	# if the `q` key was pressed, break from the loop
 	if num_loop > 10000:
 		num_loop=1
 	elif key == ord("q"):
 		break
 
-# if we are using a webcam, release the pointer
-if not args.get("video", False):
-	vs.stop()
+# # if we are using a webcam, release the pointer
+# if not args.get("video", False):
+# 	vs.stop()
 
-# otherwise, release the file pointer
-else:
-	vs.release()
+# # otherwise, release the file pointer
+# else:
+# 	vs.release()
 # close all windows
+kit.stepper1.release()
+kit.stepper2.release()
 cv2.destroyAllWindows()

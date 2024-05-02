@@ -14,20 +14,21 @@ kit = MotorKit(i2c=board.I2C())
 def center_moon(dist_y,dist_x):
     ver_x = dist_x>0
     ver_y = dist_y>0
-
+    kit.stepper1.onestep(style=stepper.MICROSTEP)
+    kit.stepper2.onestep(style=stepper.MICROSTEP)
     if ver_x:
-        kit.stepper1.onestep(style = stepper.MICROSTEP)
-        kit.stepper2.onestep(style= stepper.MICROSTEP)
+        kit.stepper1.release()
+        kit.stepper2.onestep()
 
     if not ver_x:
-        kit.stepper1.onestep(direction = stepper.BACKWARD, style = stepper.MICROSTEP)
-        kit.stepper2.onestep(direction = stepper.BACKWARD, style= stepper.MICROSTEP)
+        kit.stepper1.release()
+        kit.stepper2.onestep(direction = stepper.BACKWARD)
 
     if not ver_y:
-        kit.stepper1.onestep(style = stepper.MICROSTEP)
-        kit.stepper2.onestep(direction = stepper.BACKWARD, style= stepper.MICROSTEP)
+        kit.stepper1.onestep()
+
     if  ver_y:
-        kit.stepper1.onestep(direction = stepper.BACKWARD, style = stepper.MICROSTEP)
-        kit.stepper2.onestep(style= stepper.MICROSTEP)
+        kit.stepper1.onestep(direction = stepper.BACKWARD)
+        
 
 
