@@ -11,24 +11,24 @@ kit = MotorKit(i2c=board.I2C())
 #TILT SEMPRE NO 2
 
 
-def center_moon(dist_y,dist_x):
+def center_moon(dist_x, dist_y):
     ver_x = dist_x>0
     ver_y = dist_y>0
     kit.stepper1.onestep(style=stepper.MICROSTEP)
     kit.stepper2.onestep(style=stepper.MICROSTEP)
     if ver_x:
         kit.stepper1.release()
-        kit.stepper2.onestep()
+        kit.stepper2.onestep(direction = stepper.BACKWARD)
 
     if not ver_x:
         kit.stepper1.release()
-        kit.stepper2.onestep(direction = stepper.BACKWARD)
+        kit.stepper2.onestep()
 
     if not ver_y:
-        kit.stepper1.onestep()
+        kit.stepper1.onestep(direction = stepper.BACKWARD)
 
     if  ver_y:
-        kit.stepper1.onestep(direction = stepper.BACKWARD)
+        kit.stepper1.onestep()
         
 
 

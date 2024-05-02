@@ -96,15 +96,19 @@ while True:
 		# check to see if the tracking was a success
 		center_frame = (int((W-1)/2),int((H-1)/2))
 
-		if success:
+		if success and moon is not None:
 			(x, y, w, h) = [int(v) for v in box]
 			center_box = (x+ int(0.5*w),y+int(0.5*h))
 			cv2.rectangle(frame, (x, y), (x + w, y + h),
 				(0, 255, 0), 2)
 			
 			cv2.line(frame, center_frame , center_box , (255,0,0), 2)
-			dist_y, dist_x  = (center_box[0] - center_frame[0] ,
+			dist_x, dist_y = (center_box[0] - center_frame[0] ,
 					  center_box[1] - center_frame[1] )
+			
+			if num_loop%5 == 1:
+				for i in range(num_steps):
+					center_moon(dist_x, dist_y)
 		# update the FPS counter
 		fps.update()
 		fps.stop()
@@ -114,7 +118,7 @@ while True:
 			("Tracker", args["tracker"]),
 			("Success", "Yes" if success else "No"),
 			("FPS", "{:.2f}".format(fps.fps())),
-			("Distance", "({}, {}) pxs".format(dist_y,dist_x)),
+			("Distance", "({}, {}) pxs".format(dist_x, dist_y)),
 		]
 		# loop over the info tuples and draw them on our frame
 		for (i, (k, v)) in enumerate(info):
@@ -131,11 +135,12 @@ while True:
 	# if the 's' key is selected, we are going to "select" a bounding
 	# box to track
 
-	if (num_loop%5) == 1:
+	if (num_loop%50) == 1:
 		
 		# Try to detect the moon in the frame
 		gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) #gray_scale the image
-		_, gray = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY) #threshold the image 100 for night 150 for day
+		thresholdValue = np.mean(gray) + 1.3*np.std(gray) #threshold value for the image 
+		_, gray = cv2.threshold(gray, thresholdValue, 255, cv2.THRESH_BINARY) #threshold the image 100 for night 150 for day
 		
 		gray = cv2.GaussianBlur(gray, (3, 3), 0) #blur the grayscale image
 
@@ -147,30 +152,33 @@ while True:
 		try:
 			moon = moon[0][0]
 			moon = np.uint16(np.around(moon))
+		
+			cv2.circle(frame, (moon[0], moon[1]), moon[2], (0, 255, 255), 2) 
+			alpha = 1.2 #Parameter for the square around the moon
+			print_rect = [moon[0]-alpha*moon[2], moon[0]+alpha*moon[2], moon[1]-alpha*moon[2], moon[1]+alpha*moon[2]]
+			print_rect = tuple(map(int, print_rect))
+			print_rect = np.uint16(np.around(print_rect))
+			cv2.rectangle(frame, (print_rect[0], print_rect[2]), (print_rect[1], print_rect[3]), (255, 255, 0), 2)
+			# print("Detection =", type(print_rect[0]), print_rect, 'i=', num_loop)
+
+		
+		
+			initBB = [moon[0]-alpha*moon[2],moon[1]-alpha*moon[2],2*alpha*moon[2],2*alpha*moon[2]]
+			initBB = list(map(int, initBB))
+			# start OpenCV object tracker using the supplied bounding box
+			# coordinates, then start the FPS throughput estimator as well
+			tracker = cv2.legacy.TrackerCSRT_create()
+			tracker.init(gray, initBB)
+			
+			fps = FPS().start()
+		
 		except:
 			print("No moon detected")
+			moon = None
+			num_loop-=1
 			continue
 
-		cv2.circle(frame, (moon[0], moon[1]), moon[2], (0, 255, 255), 2) 
-		alpha = 1.2 #Parameter for the square around the moon
-		print_rect = [moon[0]-alpha*moon[2], moon[0]+alpha*moon[2], moon[1]-alpha*moon[2], moon[1]+alpha*moon[2]]
-		print_rect = tuple(map(int, print_rect))
-		print_rect = np.uint16(np.around(print_rect))
-		cv2.rectangle(frame, (print_rect[0], print_rect[2]), (print_rect[1], print_rect[3]), (255, 255, 0), 2)
-		# print("Detection =", type(print_rect[0]), print_rect, 'i=', num_loop)
 
-  	
-	
-		initBB = [moon[0]-alpha*moon[2],moon[1]-alpha*moon[2],2*alpha*moon[2],2*alpha*moon[2]]
-		initBB = list(map(int, initBB))
-		# start OpenCV object tracker using the supplied bounding box
-		# coordinates, then start the FPS throughput estimator as well
-		tracker = cv2.legacy.TrackerCSRT_create()
-		tracker.init(gray, initBB)
-		
-		fps = FPS().start()
-		for i in range(num_steps):
-			center_moon(dist_y,dist_x)
 	# if the `q` key was pressed, break from the loop
 	if num_loop > 10000:
 		num_loop=1
